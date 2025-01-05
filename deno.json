@@ -38,6 +38,7 @@
   },
   "exclude": [
     ".git",
+    "docs/di.md",
     "cov_profile",
     "spikes",
     "docs/designs"

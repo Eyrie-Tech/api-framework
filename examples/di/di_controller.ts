@@ -1,4 +1,4 @@
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
 import type { Message } from "@examples/di/di_model.ts";
 import { MessageService } from "@examples/di/di_service.ts";
@@ -8,6 +8,7 @@ import {
   type Injectable,
   type InjectableRegistration,
 } from "@eyrie/app";
+import { GetMessageResponses } from "./di_response.ts";
 
 @Controller("/messages")
 export class MessageController implements Injectable {
@@ -25,7 +26,11 @@ export class MessageController implements Injectable {
     return { dependencies: [{ class: MessageService }] };
   }
 
-  @Get({ path: "/" })
+  @Get({
+    description: "Get latest Message.",
+    path: "/",
+    responses: GetMessageResponses,
+  })
   public getLatestMessage(): Message {
     return this.#messageService.getLatestMessage();
   }

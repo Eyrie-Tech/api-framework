@@ -1,4 +1,4 @@
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
 import {
   Controller,
@@ -7,6 +7,7 @@ import {
   type InjectableRegistration,
 } from "@eyrie/app";
 import type { Message } from "./basic_model.ts";
+import { GetMessagesResponses } from "./basic_response.ts";
 
 @Controller("/messages")
 export class MessageController implements Injectable {
@@ -14,9 +15,11 @@ export class MessageController implements Injectable {
     return { dependencies: [] };
   }
 
-  // TODO(jonnydgreen): uncomment
-  // @Get({ responseType: List(Message) })
-  @Get({ path: "/" })
+  @Get({
+    description: "Get Messages.",
+    path: "/",
+    responses: GetMessagesResponses,
+  })
   public getMessages(): Message[] {
     return [
       {

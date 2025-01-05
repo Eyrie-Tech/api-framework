@@ -1,14 +1,19 @@
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
 import {
   ContainerError,
   Controller,
+  Field,
   Get,
   getRegistrationKey,
   HttpMethod,
+  HttpResponse,
+  HttpResponses,
   type Injectable,
   type InjectableRegistration,
+  List,
   type MaybePromise,
+  ObjectType,
   Service,
 } from "@eyrie/app";
 import {
@@ -125,6 +130,32 @@ Deno.test({
   },
 });
 
+@ObjectType({ description: "The Message." })
+export class Message {
+  @Field({ description: "The ID of the Message.", type: String })
+  id!: string;
+
+  @Field({ description: "The content of the Message.", type: String })
+  content!: string;
+
+  // TODO: support lists
+  // @Field({ description: "The details of the Message.", type: List(String) })
+  // details!: string[];
+}
+
+@HttpResponses({ description: "Responses" })
+export class GetMessagesResponses {
+  @HttpResponse({
+    description: "Successful response",
+    status: "OK",
+    type: List(Message),
+    resolver(response): boolean {
+      return Array.isArray(response);
+    },
+  })
+  ok!: Message[];
+}
+
 @Controller("/messages")
 class MessageController implements Injectable {
   #messageService: MessageService;
@@ -137,7 +168,11 @@ class MessageController implements Injectable {
     return { dependencies: [{ class: MessageService }] };
   }
 
-  @Get({ path: "/" })
+  @Get({
+    description: "Get messages",
+    path: "/",
+    responses: GetMessagesResponses,
+  })
   public getMessages() {
     return this.#messageService.getMessages();
   }
@@ -162,11 +197,6 @@ class MessageService implements Injectable {
 
 interface MessageRepositoryContract {
   getMessages(): Message[];
-}
-
-interface Message {
-  id: string;
-  content: string;
 }
 
 @Service()

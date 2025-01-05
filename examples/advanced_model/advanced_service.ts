@@ -1,6 +1,6 @@
 // Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
-import type { Message } from "@examples/di/di_model.ts";
+import type { Message } from "./advanced_model.ts";
 import {
   type Injectable,
   type InjectableRegistration,
@@ -18,10 +18,18 @@ export class MessageService implements Injectable {
     return { dependencies: [] };
   }
 
-  public getLatestMessage(): Message {
-    return {
-      id: "1",
-      content: "Hello",
-    };
+  public getMessages(): Message[] {
+    return [
+      {
+        id: "1",
+        details: ["details 1"],
+        sender: [1, "j"],
+      },
+      {
+        id: "2",
+        details: ["details 2"],
+        sender: [2, "c"],
+      },
+    ];
   }
 }

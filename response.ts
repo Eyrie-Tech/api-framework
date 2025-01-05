@@ -1,7 +1,13 @@
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 import { eTag } from "@std/http/etag";
-import { STATUS_CODE, STATUS_TEXT, type StatusCode } from "@std/http/status";
+import {
+  STATUS_CODE,
+  STATUS_TEXT,
+  type StatusCode,
+  type StatusText,
+} from "@std/http/status";
 import type { Context } from "./context.ts";
+import type { ClassType, MapType, MaybePromise } from "./utils.ts";
 
 // TODO(jonnydgreen): follow RFC https://www.rfc-editor.org/rfc/rfc9457.html
 
@@ -75,6 +81,113 @@ export function buildErrorResponse(
     status,
   }];
 }
+
+// TODO: should we be using Response?
+export type Responses<R> = MaybePromise<R[keyof R] | Response>;
+
+export function HttpResponses(
+  _options: ResponsesTypeOptions,
+): ResponsesTypeDecorator {
+  return function responses(
+    _target: ClassType,
+    _context: ClassDecoratorContext,
+  ): void {
+    // TODO: add functionality here
+    // const methodName = context.name;
+    // const key = Symbol(String(methodName));
+    // context.addInitializer(function (this: unknown) {
+    //   const thisArg = this as ClassType;
+    //   if (context.private || context.static) {
+    //     throw new RouteDecoratorError(
+    //       `Get() registration failed for '${thisArg?.name}.${
+    //         String(methodName)
+    //       }': private and static field registration is unsupported`,
+    //     );
+    //   }
+    //   const classKey = getRegistrationKey(thisArg.constructor);
+    //   registerRoute(key, {
+    //     method: HttpMethod.GET,
+    //     path: options.path,
+    //     controller: classKey,
+    //     methodName: methodName,
+    //   });
+    // });
+  };
+}
+
+/**
+ * The responses type decorator for the {@linkcode HttpResponses} decorator.
+ */
+export type ResponsesTypeDecorator = (
+  target: ClassType,
+  context: ClassDecoratorContext,
+) => void;
+
+/**
+ * Options for registering a response request with the {@linkcode HttpResponses} decorator.
+ */
+export interface ResponsesTypeOptions {
+  /**
+   * The description of the responses.
+   */
+  description: string;
+}
+
+export function HttpResponse<
+  Type,
+  HttpResponseType extends MapType<Type>,
+>(
+  _options: HttpResponseOptions<Type>,
+): <Class>(
+  this: unknown,
+  target: Class,
+  context: ClassFieldDecoratorContext<Class, HttpResponseType>,
+) => (this: Class, value: HttpResponseType) => HttpResponseType {
+  return function responses<Class>(
+    this: unknown,
+    _target: Class,
+    _context: ClassFieldDecoratorContext<Class, HttpResponseType>,
+  ): (this: Class, value: HttpResponseType) => HttpResponseType {
+    return function (this: Class, value: HttpResponseType): HttpResponseType {
+      // TODO: add functionality here
+      return value;
+    };
+  };
+}
+
+/**
+ * Options for registering a response request with the {@linkcode HttpResponse} decorator.
+ */
+export interface HttpResponseOptions<ResponseType> {
+  /**
+   * The description of the HTTP response.
+   */
+  description: string;
+  /**
+   * The type of the HTTP response.
+   */
+  type: ResponseType;
+  // TODO: add link to MDN
+  /**
+   * The HTTP status text of the HTTP response.
+   */
+  status: StatusText;
+  // TODO: we will want to handle the case of when nothing is matched
+  // Maybe do this in the class decorator or define a default field
+  /**
+   * The HTTP response resolver for the HTTP response. This allows one to selectively
+   * define when the registered response should be returned from the application.
+   *
+   * When `true`, the registered response is used, otherwise, it is skipped.
+   */
+  // TODO: how do we pass through the type
+  // Do we get from the class?
+  resolver: HttpResponseResolver;
+}
+
+export type HttpResponseResolver = <HttpResponseTypes>(
+  response: Responses<HttpResponseTypes>,
+) => boolean;
 
 /**
  * Process the input parameters for instantiating a {@linkcode Response}

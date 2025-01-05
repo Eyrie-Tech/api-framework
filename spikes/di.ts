@@ -1,4 +1,4 @@
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
 // import "npm:reflect-metadata";
 // import { Container } from "npm:inversify";

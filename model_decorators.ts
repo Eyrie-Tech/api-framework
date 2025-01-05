@@ -1,20 +1,15 @@
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
 import * as z from "zod";
-import { type ClassType, exists, type Fn, type MapType } from "./utils.ts";
+import { isListType } from "./model_builders.ts";
 import {
   ClassRegistrationType,
   getRegistrationKey,
   maybeGetRegistrationKey,
   registerClass,
 } from "./registration.ts";
-
-// TODO(jonnydgreen): we most likely want custom types for this
-export type { ZodObject, ZodRawShape, ZodTypeAny } from "zod";
-
-const models = new Map<symbol, ValidationMetadata>();
-
-type ValidationMetadata = z.ZodObject<z.ZodRawShape>;
+import { type ClassType, exists, type Fn, type MapType } from "./utils.ts";
+import { getValidationModel, registerValidationModel } from "./validation.ts";
 
 /**
  * The input type class method decorator that registers a field for a type.
@@ -71,42 +66,51 @@ export function Field<
       // Handle custom types
       const fieldTypeKey = maybeGetRegistrationKey(options.type);
       if (fieldTypeKey) {
-        const customValidation = models.get(fieldTypeKey);
+        const customValidation = getValidationModel(fieldTypeKey);
         if (!exists(customValidation)) {
           throw new FieldDecoratorError(
             `Field() registration failed for '${thisArg?.constructor.name}.${fieldName}': no validation schema exists for field type '${fieldTypeKey.description}'`,
           );
         }
-        models.set(
+        registerValidationModel(
           classKey,
           validation.extend({ [fieldName]: customValidation }),
         );
         return value;
       }
 
+      // TODO: should we instead build up a series of references?
       if (typeof options.type === "function") {
+        if (isListType(options.type)) {
+          registerValidationModel(
+            classKey,
+            validation.extend({ [fieldName]: z.string() }),
+          );
+          return value;
+        }
+
         const typeName = options.type.name;
         switch (typeName) {
           case "String": {
-            models.set(
+            registerValidationModel(
               classKey,
               validation.extend({ [fieldName]: z.string() }),
             );
-            break;
+            return value;
           }
           case "Number": {
-            models.set(
+            registerValidationModel(
               classKey,
               validation.extend({ [fieldName]: z.number() }),
             );
-            break;
+            return value;
           }
           case "Boolean": {
-            models.set(
+            registerValidationModel(
               classKey,
               validation.extend({ [fieldName]: z.boolean() }),
             );
-            break;
+            return value;
           }
           default: {
             throw new FieldDecoratorError(
@@ -114,12 +118,11 @@ export function Field<
             );
           }
         }
-      } else {
-        throw new FieldDecoratorError(
-          `Field() registration failed for '${thisArg?.constructor.name}.${fieldName}': unsupported type '${options.type?.toString()}'`,
-        );
       }
-      return value;
+
+      throw new FieldDecoratorError(
+        `Field() registration failed for '${thisArg?.constructor.name}.${fieldName}': unsupported type '${options.type?.toString()}'`,
+      );
     };
   }
   return fieldDecorator;
@@ -166,7 +169,7 @@ export function ObjectType(_options: ObjectTypeOptions): (
       type: ClassRegistrationType.ObjectType,
       target,
     });
-    models.set(key, z.object({}));
+    registerValidationModel(key, z.object({}));
     // TODO(jonnydgreen): is there a better way of triggering the field exports?
     new target();
   }
@@ -211,7 +214,7 @@ export function InputType(_options: InputTypeOptions): (
       target,
     });
     // TODO(jonnydgreen): insert options here
-    models.set(key, z.object({}));
+    registerValidationModel(key, z.object({}));
     // TODO(jonnydgreen): is there a better way of triggering the field exports?
     new target();
   }
@@ -249,7 +252,7 @@ function getRootTypeInfo<Class extends ClassType>(
   target: Class | Fn,
 ): TypeInfo<InstanceType<Class>> {
   const key = getRegistrationKey(target);
-  const schema = models.get(key);
+  const schema = getValidationModel(key);
   if (!exists(schema)) {
     throw new FieldDecoratorError(
       `Field() registration failed for ${fieldSlug}: no schema defined for '${key.description}'`,

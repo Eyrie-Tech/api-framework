@@ -1,4 +1,4 @@
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
 import { assertEquals, assertStrictEquals } from "@std/assert";
 import { STATUS_CODE, STATUS_TEXT } from "@std/http/status";
@@ -7,8 +7,11 @@ import {
   Controller,
   Get,
   HttpMethod,
+  HttpResponse,
+  HttpResponses,
   type Injectable,
   type InjectableRegistration,
+  type Responses,
 } from "@eyrie/app";
 // TODO: get from app
 import type { ErrorResponse } from "../response.ts";
@@ -112,19 +115,37 @@ Deno.test({
   },
 });
 
+@HttpResponses({ description: "Responses" })
+class BasicResponses {
+  @HttpResponse({
+    description: "Successful response",
+    status: "OK",
+    // TODO: support empty or void type
+    type: String,
+    resolver(response): boolean {
+      return Array.isArray(response);
+    },
+  })
+  ok!: string;
+}
+
 @Controller("/")
 class MessageController implements Injectable {
   public register(): InjectableRegistration {
     return { dependencies: [] };
   }
 
-  @Get({ path: "/error" })
-  public throwError() {
+  @Get({ description: "throwError", path: "/error", responses: BasicResponses })
+  public throwError(): Responses<BasicResponses> {
     throw new Error("kaboom");
   }
 
-  @Get({ path: "/error-string" })
-  public throwErrorString() {
+  @Get({
+    description: "throwErrorString",
+    path: "/error-string",
+    responses: BasicResponses,
+  })
+  public throwErrorString(): Responses<BasicResponses> {
     throw "kaboom";
   }
 }

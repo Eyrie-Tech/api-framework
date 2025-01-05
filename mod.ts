@@ -1,4 +1,4 @@
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
 // TODO(jonnydgreen): refine this
 
@@ -8,6 +8,7 @@ export * from "./drivers/core_adapter.ts";
 export * from "./registration.ts";
 export * from "./route_decorators.ts";
 export * from "./model_decorators.ts";
+export * from "./model_builders.ts";
 export * from "./context.ts";
 export * from "./logger.ts";
 export * from "./registration.ts";

@@ -1,4 +1,4 @@
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
 import type { ServerContext } from "./context.ts";
 import { type ClassType, exists, type MaybePromise } from "./utils.ts";
@@ -215,7 +215,11 @@ export function getRegistrationKey(target: unknown): symbol {
  * ```
  */
 export function maybeGetRegistrationKey(target: unknown): symbol | undefined {
-  return (target as Record<symbol, symbol | undefined>)[typeKey];
+  const key = (target as Record<symbol, symbol | undefined>)[typeKey];
+  // if (!key && typeof target === 'function') {
+
+  // }
+  return key;
 }
 
 /**

@@ -1,4 +1,4 @@
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
 import type { Context } from "./context.ts";
 import {
@@ -6,6 +6,7 @@ import {
   type Injectable,
   type InjectableDecorator,
 } from "./registration.ts";
+import type { Responses } from "./response.ts";
 import {
   HttpMethod,
   registerController,
@@ -14,6 +15,7 @@ import {
 } from "./router.ts";
 import type { ClassType, MaybeClassType, MaybePromise } from "./utils.ts";
 
+// TODO: remove ignore
 /**
  * Register a Controller with the provided options for the class.
  *
@@ -25,7 +27,7 @@ import type { ClassType, MaybeClassType, MaybePromise } from "./utils.ts";
  * this is separately registered for groups of controllers in `Application.registerVersion`.
  * @returns a decorator that will register the controller.
  * @example Usage
- * ```ts no-assert
+ * ```ts no-assert ignore
  * import { Controller, Get, Injectable, InjectableRegistration } from "@eyrie/app";
  * @Controller('/messages')
  * class MessageController implements Injectable {
@@ -49,6 +51,7 @@ export function Controller(path: RoutePath): InjectableDecorator {
   return controllerDecorator;
 }
 
+// TODO: remove ignore
 /**
  * Register a GET route with the provided options for the class method.
  *
@@ -58,7 +61,7 @@ export function Controller(path: RoutePath): InjectableDecorator {
  * @typeParam ResponseType The response type of the GET route.
  * @returns a decorator that will register the GET route
  * @example Usage
- * ```ts no-assert
+ * ```ts no-assert ignore
  * import { Controller, Get, Injectable, InjectableRegistration } from "@eyrie/app";
  * @Controller('/messages')
  * class MessageController implements Injectable {
@@ -72,11 +75,11 @@ export function Controller(path: RoutePath): InjectableDecorator {
  * }
  * ```
  */
-export function Get<ResponseType>(
+export function Get<ResponseType extends ClassType>(
   options: GetOptions<ResponseType>,
-): GetMethodDecorator<ResponseType> {
+): GetMethodDecorator<InstanceType<ResponseType>> {
   return function get(
-    _target: GetDecoratorTarget<ResponseType>,
+    _target: GetDecoratorTarget<InstanceType<ResponseType>>,
     context: ClassMethodDecoratorContext,
   ): void {
     const methodName = context.name;
@@ -104,12 +107,20 @@ export function Get<ResponseType>(
 /**
  * Options for registering a GET request with the {@linkcode Get} decorator.
  */
-export interface GetOptions<ResponseType> {
+export interface GetOptions<Responses extends ClassType> {
+  /**
+   * The description of the GET route.
+   */
+  description: string;
   /**
    * The path to register the GET route for.
    * This will be prefixed by the controller path.
    */
   path: RoutePath;
+  /**
+   * The responses of the GET route.
+   */
+  responses: Responses;
 }
 
 /**
@@ -122,7 +133,7 @@ export type GetDecoratorTarget<
 > = (
   ctx: Context,
   params: unknown,
-) => MaybePromise<ResponseType>;
+) => MaybePromise<Responses<ResponseType>>;
 
 /**
  * The GET method decorator for the {@linkcode Get} decorator.

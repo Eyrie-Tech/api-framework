@@ -1,4 +1,4 @@
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
 import {
   type ClassType,
@@ -52,9 +52,9 @@ export function createControllerWithPostRoute(
   return { controller: BaseController, input };
 }
 
-export function createControllerWithGetRoute(
+export function createControllerWithGetRoute<Responses extends ClassType>(
   controllerPath: RoutePath,
-  options: GetOptions<unknown>,
+  options: Pick<GetOptions<Responses>, "path">,
   handler?: (ctx: Context, params: unknown) => void,
 ): ControllerResult {
   const input: ControllerHandlerInput = {
@@ -66,8 +66,9 @@ export function createControllerWithGetRoute(
     public register(): InjectableRegistration {
       return { dependencies: [] };
     }
-
-    @Get(options)
+    // TODO: the responses type here
+    // deno-lint-ignore no-explicit-any
+    @Get({ ...options, description: "Get route", responses: String as any })
     public getRoute(
       ctx: Context,
       params: unknown,

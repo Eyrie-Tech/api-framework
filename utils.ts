@@ -1,4 +1,4 @@
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
 /**
  * Asserts that a provided input is never actually passed.
@@ -92,3 +92,5 @@ export type MapType<T> = T extends StringConstructor ? string
   : T extends null ? null
   : T extends ClassType ? InstanceType<T>
   : T;
+
+export type MapTypes<T> = { [P in keyof T]: MapType<T[P]> };

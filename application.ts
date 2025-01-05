@@ -1,4 +1,4 @@
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
 import { CoreDriverAdapter } from "./drivers/core_adapter.ts";
 import { type Driver, DriverStrategy } from "./drivers/driver.ts";

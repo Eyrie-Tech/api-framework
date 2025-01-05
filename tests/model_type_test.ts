@@ -1,4 +1,4 @@
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
 import { assert } from "@std/assert";
 import { assertSnapshot } from "@std/testing/snapshot";
@@ -155,7 +155,7 @@ interface TestCase {
 
 function sanitiseDiagnostics(diagnostics: string): string {
   return diagnostics.replace(
-    /file:\/\/.+\/\$deno\$eval\.ts/g,
+    /file:\/\/.+\/\$deno\$eval\.m?ts/g,
     "file://__PATH__/$deno$eval.ts",
   );
 }
