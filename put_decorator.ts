@@ -6,38 +6,38 @@ import { HttpMethod, registerRoute, type RoutePath } from "./router.ts";
 import type { ClassType, MaybeClassType, MaybePromise } from "./utils.ts";
 
 /**
- * Register a POST route with the provided options for the class method.
+ * Register a PUT route with the provided options for the class method.
  *
  * Note, this will not work for private or static properties.
  *
- * @param options The options for registering a POST route.
- * @typeParam RequestBody The request body type of the POST route.
- * @typeParam ResponseType The response type of the POST route.
- * @returns a decorator that will register the POST route
+ * @param options The options for registering a PUT route.
+ * @typeParam RequestBody The request body type of the PUT route.
+ * @typeParam ResponseType The response type of the PUT route.
+ * @returns a decorator that will register the PUT route
  * @example Usage
  * ```ts no-assert
- * import { Controller, Post, Injectable, InjectableRegistration } from "@eyrie/app";
+ * import { Controller, Put, Injectable, InjectableRegistration } from "@eyrie/app";
  *
  * @Controller('/messages')
  * class MessageController implements Injectable {
  *   register(): InjectableRegistration {
  *     return { dependencies: [] };
  *   }
- *   @Post({ description: "Create Message", path: "/" })
+ *   @Put({ description: "Create Message", path: "/" })
  *   public createMessage(): void {
  *     // Create message
  *   }
  * }
  * ```
  */
-export function Post<RequestBody, ResponseType>(
-  options: PostOptions<
+export function Put<RequestBody, ResponseType>(
+  options: PutOptions<
     MaybeClassType<RequestBody>,
     MaybeClassType<ResponseType>
   >,
-): PostMethodDecorator<RequestBody, ResponseType> {
-  return function post(
-    _target: PostDecoratorTarget<RequestBody, ResponseType>,
+): PutMethodDecorator<RequestBody, ResponseType> {
+  return function put(
+    _target: PutDecoratorTarget<RequestBody, ResponseType>,
     context: ClassMethodDecoratorContext,
   ): void {
     const methodName = context.name;
@@ -46,7 +46,7 @@ export function Post<RequestBody, ResponseType>(
       const thisArg = this as ClassType;
       if (context.private || context.static) {
         throw new RouteDecoratorError(
-          `Post() registration failed for '${thisArg?.name}.${
+          `Put() registration failed for '${thisArg?.name}.${
             String(methodName)
           }': private and static field registration is unsupported`,
         );
@@ -57,7 +57,7 @@ export function Post<RequestBody, ResponseType>(
         body = getRegistrationKey(options.body);
       }
       registerRoute(key, {
-        method: HttpMethod.POST,
+        method: HttpMethod.PUT,
         path: options.path,
         controller: classKey,
         methodName: methodName,
@@ -68,37 +68,37 @@ export function Post<RequestBody, ResponseType>(
 }
 
 /**
- * Options for registering a POST request with the {@linkcode Post} decorator.
+ * Options for registering a PUT request with the {@linkcode Put} decorator.
  */
-export interface PostOptions<
+export interface PutOptions<
   RequestBody = unknown,
   ResponseType = unknown,
 > {
   /**
-   * The description of the POST route.
+   * The description of the PUT route.
    */
   description: string;
   /**
-   * The path to register the POST route for.
+   * The path to register the PUT route for.
    * This will be prefixed by the controller path.
    */
   path: RoutePath;
   /**
-   * The request body type of the POST route.
+   * The request body type of the PUT route.
    */
   body?: RequestBody;
   /**
-   * The response type of the POST route.
+   * The response type of the PUT route.
    */
   response?: ResponseType;
 }
 
 /**
- * The POST method for the {@linkcode Post} decorator.
+ * The PUT method for the {@linkcode Put} decorator.
  *
  * All the parameters will be included in each incoming {@linkcode Request}.
  */
-export type PostDecoratorTarget<
+export type PutDecoratorTarget<
   RequestBody,
   ResponseType,
 > = (
@@ -108,9 +108,9 @@ export type PostDecoratorTarget<
 ) => MaybePromise<ResponseType>;
 
 /**
- * The POST method decorator for the {@linkcode Post} decorator.
+ * The PUT method decorator for the {@linkcode Put} decorator.
  */
-export type PostMethodDecorator<RequestBody, ResponseType> = (
-  target: PostDecoratorTarget<RequestBody, ResponseType>,
+export type PutMethodDecorator<RequestBody, ResponseType> = (
+  target: PutDecoratorTarget<RequestBody, ResponseType>,
   context: ClassMethodDecoratorContext,
 ) => void;
