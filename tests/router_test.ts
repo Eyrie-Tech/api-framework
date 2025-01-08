@@ -80,7 +80,7 @@ Deno.test({
         return getOutput;
       }
 
-      @Post({ path: "/same-path" })
+      @Post({ description: "Post route", path: "/same-path" })
       public postRoute(ctx: Context, params: unknown, body: unknown): unknown {
         postInput.ctx = ctx;
         postInput.params = params;
@@ -125,7 +125,7 @@ Deno.test({
         return { dependencies: [] };
       }
 
-      @Post({ path: "/no-response" })
+      @Post({ description: "Post route", path: "/no-response" })
       public postRoute(ctx: Context, params: unknown, body: unknown): void {
         input.ctx = ctx;
         input.params = params;
@@ -283,7 +283,11 @@ Deno.test({
         return { dependencies: [] };
       }
 
-      @Post({ path: "/non-input-type", body: InvalidBody })
+      @Post({
+        description: "Route",
+        path: "/non-input-type",
+        body: InvalidBody,
+      })
       public route() {
         return "";
       }

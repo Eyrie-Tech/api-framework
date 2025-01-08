@@ -29,7 +29,7 @@ Deno.test({
     // Arrange
     const { controller, input } = createControllerWithPostRoute(
       "/messages",
-      { path: "/" },
+      { description: "Post route", path: "/" },
     );
     await using setup = await setupApplication([controller]);
     const url = new URL("/v1/messages", setup.origin);
@@ -152,7 +152,7 @@ Deno.test({
       const [Input, inputBody] = testInput();
       const { controller, input } = createControllerWithPostRoute(
         "/messages",
-        { path: "/", body: Input },
+        { description: "Post route", path: "/", body: Input },
       );
       await using setup = await setupApplication([controller]);
       const url = new URL("/v1/messages", setup.origin);
@@ -377,8 +377,8 @@ Deno.test({
             return { dependencies: [] };
           }
 
-          @Post({ path: "/static" })
-          public static getRoute(
+          @Post({ description: "Post route", path: "/static" })
+          public static postRoute(
             _ctx: Context,
             _params: unknown,
           ): void {
@@ -386,7 +386,7 @@ Deno.test({
         }
       },
       RouteDecoratorError,
-      "Post() registration failed for 'StaticController.getRoute': private and static field registration is unsupported",
+      "Post() registration failed for 'StaticController.postRoute': private and static field registration is unsupported",
     );
   },
 });

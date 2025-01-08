@@ -9,7 +9,11 @@ import {
   registerClass,
 } from "./registration.ts";
 import { type ClassType, exists, type Fn, type MapType } from "./utils.ts";
-import { getValidationModel, registerValidationModel } from "./validation.ts";
+import {
+  getValidationModel,
+  registerValidationModel,
+  type TypeInfo,
+} from "./validation.ts";
 
 /**
  * The input type class method decorator that registers a field for a type.
@@ -259,31 +263,6 @@ function getRootTypeInfo<Class extends ClassType>(
     );
   }
   return { key, schema: schema as TypeInfo<InstanceType<Class>>["schema"] };
-}
-
-/**
- * The type info schema used in {@linkcode TypeInfo}.
- */
-export type TypeInfoSchema<Type extends z.ZodRawShape> = z.ZodObject<
-  Type,
-  "strip",
-  z.ZodTypeAny,
-  Type,
-  Type
->;
-
-/**
- * The type information returned by {@linkcode getRootTypeInfo}.
- */
-export interface TypeInfo<Type extends z.ZodRawShape> {
-  /**
-   * The registration key of the type information.
-   */
-  key: symbol;
-  /**
-   * The schema of the of the type information.
-   */
-  schema: TypeInfoSchema<Type>;
 }
 
 // TODO: look into a generic error that forces one to define:
