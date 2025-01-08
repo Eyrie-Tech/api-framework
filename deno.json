@@ -14,7 +14,7 @@
   },
   "lock": false,
   "imports": {
-    "@deno/doc": "jsr:@deno/doc@0",
+    "@deno/doc": "jsr:@deno/doc@0.161",
     "reflect-metadata": "npm:reflect-metadata@0",
     "inversify": "npm:inversify@6",
     "typescript": "npm:typescript@5",
