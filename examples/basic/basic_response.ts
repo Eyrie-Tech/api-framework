@@ -3,7 +3,7 @@
 import { HttpResponse, HttpResponses, List } from "@eyrie/app";
 import { Message } from "./basic_model.ts";
 
-@HttpResponses({ description: "Responses" })
+@HttpResponses({ description: "Get Messages Responses" })
 export class GetMessagesResponses {
   @HttpResponse({
     description: "Successful response",
@@ -14,4 +14,17 @@ export class GetMessagesResponses {
     },
   })
   ok!: Message[];
+}
+
+@HttpResponses({ description: "Send Message Responses" })
+export class SendMessageResponses {
+  @HttpResponse({
+    description: "Successful response",
+    status: "OK",
+    type: Message,
+    resolver(response): boolean {
+      return typeof response === "object";
+    },
+  })
+  ok!: Message;
 }

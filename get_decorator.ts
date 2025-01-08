@@ -1,12 +1,13 @@
-// TODO: remove ignore
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
-import type { Context } from "./context.ts";
-import { getRegistrationKey } from "./registration.ts";
-import type { Responses } from "./response.ts";
-import { RouteDecoratorError } from "./route_decorators.ts";
-import { HttpMethod, registerRoute, type RoutePath } from "./router.ts";
-import type { ClassType, MaybePromise } from "./utils.ts";
+import {
+  buildRouteDecorator,
+  type RouteMethodDecorator,
+} from "./route_decorators.ts";
+import { HttpMethod, type RoutePath } from "./router.ts";
+import type { ClassType } from "./utils.ts";
 
+// TODO: fix example and add to actual example
 /**
  * Register a GET route with the provided options for the class method.
  *
@@ -32,31 +33,8 @@ import type { ClassType, MaybePromise } from "./utils.ts";
  */
 export function Get<ResponseType extends ClassType>(
   options: GetOptions<ResponseType>,
-): GetMethodDecorator<InstanceType<ResponseType>> {
-  return function get(
-    _target: GetDecoratorTarget<InstanceType<ResponseType>>,
-    context: ClassMethodDecoratorContext,
-  ): void {
-    const methodName = context.name;
-    const key = Symbol(String(methodName));
-    context.addInitializer(function (this: unknown) {
-      const thisArg = this as ClassType;
-      if (context.private || context.static) {
-        throw new RouteDecoratorError(
-          `Get() registration failed for '${thisArg?.name}.${
-            String(methodName)
-          }': private and static field registration is unsupported`,
-        );
-      }
-      const classKey = getRegistrationKey(thisArg.constructor);
-      registerRoute(key, {
-        method: HttpMethod.GET,
-        path: options.path,
-        controller: classKey,
-        methodName: methodName,
-      });
-    });
-  };
+): RouteMethodDecorator<InstanceType<ResponseType>> {
+  return buildRouteDecorator({ ...options, method: HttpMethod.GET });
 }
 
 /**
@@ -77,23 +55,3 @@ export interface GetOptions<Responses extends ClassType> {
    */
   responses?: Responses;
 }
-
-/**
- * The GET method for the {@linkcode Get} decorator.
- *
- * All the parameters will be included in each incoming {@linkcode Request}.
- */
-export type GetDecoratorTarget<
-  ResponseType,
-> = (
-  ctx: Context,
-  params: unknown,
-) => MaybePromise<Responses<ResponseType>>;
-
-/**
- * The GET method decorator for the {@linkcode Get} decorator.
- */
-export type GetMethodDecorator<ResponseType> = (
-  target: GetDecoratorTarget<ResponseType>,
-  context: ClassMethodDecoratorContext,
-) => void;

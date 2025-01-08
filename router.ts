@@ -229,10 +229,25 @@ export type RouteHandler = (
  * The supported HTTP methods by the framework.
  */
 export const enum HttpMethod {
+  /**
+   * GET HTTP Method.
+   */
   GET = "GET",
+  /**
+   * POST HTTP Method.
+   */
   POST = "POST",
+  /**
+   * PUT HTTP Method.
+   */
   PUT = "PUT",
+  /**
+   * PATCH HTTP Method.
+   */
   PATCH = "PATCH",
+  /**
+   * DELETE HTTP Method.
+   */
   DELETE = "DELETE",
 }
 

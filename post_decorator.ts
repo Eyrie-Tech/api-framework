@@ -1,10 +1,12 @@
 // Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
-import type { Context } from "./context.ts";
-import { getRegistrationKey } from "./registration.ts";
-import { RouteDecoratorError } from "./route_decorators.ts";
-import { HttpMethod, registerRoute, type RoutePath } from "./router.ts";
-import type { ClassType, MaybeClassType, MaybePromise } from "./utils.ts";
+import {
+  buildRouteDecorator,
+  type RouteMethodDecoratorWithBody,
+} from "./route_decorators.ts";
+import { HttpMethod, type RoutePath } from "./router.ts";
+import type { ClassType } from "./utils.ts";
 
+// TODO: fix example and add to actual example
 /**
  * Register a POST route with the provided options for the class method.
  *
@@ -30,49 +32,30 @@ import type { ClassType, MaybeClassType, MaybePromise } from "./utils.ts";
  * }
  * ```
  */
-export function Post<RequestBody, ResponseType>(
-  options: PostOptions<
-    MaybeClassType<RequestBody>,
-    MaybeClassType<ResponseType>
-  >,
-): PostMethodDecorator<RequestBody, ResponseType> {
-  return function post(
-    _target: PostDecoratorTarget<RequestBody, ResponseType>,
-    context: ClassMethodDecoratorContext,
-  ): void {
-    const methodName = context.name;
-    const key = Symbol(String(methodName));
-    context.addInitializer(function (this: unknown) {
-      const thisArg = this as ClassType;
-      if (context.private || context.static) {
-        throw new RouteDecoratorError(
-          `Post() registration failed for '${thisArg?.name}.${
-            String(methodName)
-          }': private and static field registration is unsupported`,
-        );
-      }
-      const classKey = getRegistrationKey(thisArg.constructor);
-      let body: symbol | undefined = undefined;
-      if (options.body) {
-        body = getRegistrationKey(options.body);
-      }
-      registerRoute(key, {
-        method: HttpMethod.POST,
-        path: options.path,
-        controller: classKey,
-        methodName: methodName,
-        body,
-      });
-    });
-  };
+export function Post<
+  ResponseType extends ClassType,
+  RequestBody extends ClassType,
+>(
+  options: PostOptions<ResponseType, RequestBody>,
+): RouteMethodDecoratorWithBody<
+  InstanceType<ResponseType>,
+  InstanceType<RequestBody>
+> {
+  return buildRouteDecorator({
+    ...options,
+    method: HttpMethod.POST,
+  }) as RouteMethodDecoratorWithBody<
+    InstanceType<ResponseType>,
+    InstanceType<RequestBody>
+  >;
 }
 
 /**
  * Options for registering a POST request with the {@linkcode Post} decorator.
  */
 export interface PostOptions<
-  RequestBody = unknown,
-  ResponseType = unknown,
+  Responses extends ClassType,
+  RequestBody extends ClassType,
 > {
   /**
    * The description of the POST route.
@@ -84,33 +67,11 @@ export interface PostOptions<
    */
   path: RoutePath;
   /**
+   * The responses of the POST route.
+   */
+  responses?: Responses;
+  /**
    * The request body type of the POST route.
    */
   body?: RequestBody;
-  /**
-   * The response type of the POST route.
-   */
-  response?: ResponseType;
 }
-
-/**
- * The POST method for the {@linkcode Post} decorator.
- *
- * All the parameters will be included in each incoming {@linkcode Request}.
- */
-export type PostDecoratorTarget<
-  RequestBody,
-  ResponseType,
-> = (
-  ctx: Context,
-  params: unknown,
-  body: RequestBody,
-) => MaybePromise<ResponseType>;
-
-/**
- * The POST method decorator for the {@linkcode Post} decorator.
- */
-export type PostMethodDecorator<RequestBody, ResponseType> = (
-  target: PostDecoratorTarget<RequestBody, ResponseType>,
-  context: ClassMethodDecoratorContext,
-) => void;

@@ -26,8 +26,12 @@ interface ControllerResult {
 
 export function createControllerWithPostRoute(
   controllerPath: RoutePath,
-  options: PostOptions<ClassType<unknown>, unknown>,
-  handler?: (ctx: Context, params: unknown, body: unknown) => void,
+  options: PostOptions<ClassType, ClassType>,
+  handler?: (
+    ctx: Context,
+    params: unknown,
+    body: unknown,
+  ) => void,
 ): ControllerResult {
   const input: ControllerHandlerInput = {
     ctx: undefined,
@@ -40,7 +44,11 @@ export function createControllerWithPostRoute(
     }
 
     @Post(options)
-    public postRoute(ctx: Context, params: unknown, body: unknown): unknown {
+    public postRoute(
+      ctx: Context,
+      params: unknown,
+      body: unknown,
+    ): unknown {
       input.ctx = ctx;
       input.params = params;
       input.body = body;

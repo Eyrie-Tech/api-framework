@@ -1,12 +1,13 @@
-// TODO: remove ignore
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
-import type { Context } from "./context.ts";
-import { getRegistrationKey } from "./registration.ts";
-import type { Responses } from "./response.ts";
-import { RouteDecoratorError } from "./route_decorators.ts";
-import { HttpMethod, registerRoute, type RoutePath } from "./router.ts";
-import type { ClassType, MaybePromise } from "./utils.ts";
+import {
+  buildRouteDecorator,
+  type RouteMethodDecorator,
+} from "./route_decorators.ts";
+import { HttpMethod, type RoutePath } from "./router.ts";
+import type { ClassType } from "./utils.ts";
 
+// TODO: fix example and add to actual example
 /**
  * Register a DELETE route with the provided options for the class method.
  *
@@ -24,7 +25,7 @@ import type { ClassType, MaybePromise } from "./utils.ts";
  *     return { dependencies: [] };
  *   }
  *   @Delete({ path: "/" })
- *   public getMessages(): string[] {
+ *   public deleteMessage(): string[] {
  *     return ["Hello", "Hiya"];
  *   }
  * }
@@ -32,31 +33,8 @@ import type { ClassType, MaybePromise } from "./utils.ts";
  */
 export function Delete<ResponseType extends ClassType>(
   options: DeleteOptions<ResponseType>,
-): DeleteMethodDecorator<InstanceType<ResponseType>> {
-  return function deleteRoute(
-    _target: DeleteDecoratorTarget<InstanceType<ResponseType>>,
-    context: ClassMethodDecoratorContext,
-  ): void {
-    const methodName = context.name;
-    const key = Symbol(String(methodName));
-    context.addInitializer(function (this: unknown) {
-      const thisArg = this as ClassType;
-      if (context.private || context.static) {
-        throw new RouteDecoratorError(
-          `Delete() registration failed for '${thisArg?.name}.${
-            String(methodName)
-          }': private and static field registration is unsupported`,
-        );
-      }
-      const classKey = getRegistrationKey(thisArg.constructor);
-      registerRoute(key, {
-        method: HttpMethod.DELETE,
-        path: options.path,
-        controller: classKey,
-        methodName: methodName,
-      });
-    });
-  };
+): RouteMethodDecorator<InstanceType<ResponseType>> {
+  return buildRouteDecorator({ ...options, method: HttpMethod.DELETE });
 }
 
 /**
@@ -77,23 +55,3 @@ export interface DeleteOptions<Responses extends ClassType> {
    */
   responses?: Responses;
 }
-
-/**
- * The DELETE method for the {@linkcode Delete} decorator.
- *
- * All the parameters will be included in each incoming {@linkcode Request}.
- */
-export type DeleteDecoratorTarget<
-  ResponseType,
-> = (
-  ctx: Context,
-  params: unknown,
-) => MaybePromise<Responses<ResponseType>>;
-
-/**
- * The DELETE method decorator for the {@linkcode Delete} decorator.
- */
-export type DeleteMethodDecorator<ResponseType> = (
-  target: DeleteDecoratorTarget<ResponseType>,
-  context: ClassMethodDecoratorContext,
-) => void;
