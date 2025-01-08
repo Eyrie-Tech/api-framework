@@ -27,7 +27,10 @@ export async function setupApplication(
 }
 
 export function buildServerOrigin(server: ApplicationServer): URL {
-  return new URL(`http://${server.addr.hostname}:${server.addr.port}`);
+  const hostname = server.addr.hostname === "0.0.0.0"
+    ? "127.0.0.1"
+    : server.addr.hostname;
+  return new URL(`http://${hostname}:${server.addr.port}`);
 }
 
 export function setupPermissions(
