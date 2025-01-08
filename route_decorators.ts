@@ -81,12 +81,30 @@ export class RouteDecoratorError extends Error {
   override readonly name = "RouteDecoratorError";
 }
 
+/**
+ * Build decorator for the specific route method. All values of {@linkcode HttpMethod}
+ * are supported.
+ * @param options The route method decorator options.
+ * @returns The built decorator
+ * @typeParam ResponseType The response type of the route.
+ * @typeParam RequestBody The response body type of the route.
+ * @example Usage
+ * ```ts ignore
+ * import { buildRouteDecorator, HttpMethod } from "@eyrie/app";
+ * buildRouteDecorator({ method: HttpMethod.GET });
+ * ```
+ */
 export function buildRouteDecorator<
   ResponseType extends ClassType,
   RequestBody extends ClassType,
 >(
   options: BuildRouteDecoratorOptions<ResponseType, RequestBody>,
-) {
+): (
+  _target:
+    | RouteDecoratorTarget<InstanceType<ResponseType>>
+    | RouteDecoratorTargetWithBody<InstanceType<ResponseType>, RequestBody>,
+  context: ClassMethodDecoratorContext,
+) => void {
   return function route(
     _target:
       | RouteDecoratorTarget<InstanceType<ResponseType>>
@@ -122,6 +140,9 @@ export function buildRouteDecorator<
   };
 }
 
+/**
+ * The options of the {@linkcode buildRouteDecorator} function.
+ */
 export interface BuildRouteDecoratorOptions<
   Responses extends ClassType,
   RequestBody extends ClassType,

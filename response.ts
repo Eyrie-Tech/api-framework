@@ -9,6 +9,8 @@ import {
 import type { Context } from "./context.ts";
 import type { ClassType, MapType, MaybePromise } from "./utils.ts";
 
+export { type StatusText } from "@std/http/status";
+
 // TODO(jonnydgreen): follow RFC https://www.rfc-editor.org/rfc/rfc9457.html
 
 /**
@@ -83,8 +85,39 @@ export function buildErrorResponse(
 }
 
 // TODO: should we be using Response?
+/**
+ * The resolved responses from the defined HTTP responses object.
+ */
 export type Responses<R> = MaybePromise<R[keyof R] | Response>;
 
+/**
+ * Registers all the possible HTTP Responses for a route within
+ * the framework.
+ *
+ * Each registered response contains a `resolver` function which is
+ * used by the framework to identify a response and how it
+ * should be handled. For example, setting the HTTP status code.
+ *
+ * @param _options The HTTP responses options.
+ * @returns The HTTP responses decorator
+ * @example Usage
+ * ```ts no-assert
+ * import { HttpResponses, HttpResponse } from "@eyrie/app";
+ *
+ * @HttpResponses({ description: "Get Messages Responses" })
+ * export class GetMessagesResponses {
+ *   @HttpResponse({
+ *     description: "Successful response",
+ *     status: "OK",
+ *     type: String,
+ *     resolver(response): boolean {
+ *       return typeof response === "string";
+ *     },
+ *   })
+ *   ok!: string;
+ * }
+ * ```
+ */
 export function HttpResponses(
   _options: ResponsesTypeOptions,
 ): ResponsesTypeDecorator {
@@ -133,6 +166,36 @@ export interface ResponsesTypeOptions {
   description: string;
 }
 
+/**
+ * Register an HTTP Response within the framework as part of the
+ * HTTP responses definition.
+ *
+ * The `resolver` function is used by the framework to identify
+ * a response and how it should be handled. For example, setting
+ * the HTTP status code.
+ *
+ * @param _options The HTTP response options.
+ * @returns The HTTP response decorator
+ * @typeParam Type The type of the HTTP Response
+ * @typeParam HttpResponseType The HTTP response type of the HTTP Response
+ * @example Usage
+ * ```ts no-assert
+ * import { HttpResponses, HttpResponse } from "@eyrie/app";
+ *
+ * @HttpResponses({ description: "Get Messages Responses" })
+ * export class GetMessagesResponses {
+ *   @HttpResponse({
+ *     description: "Successful response",
+ *     status: "OK",
+ *     type: String,
+ *     resolver(response): boolean {
+ *       return typeof response === "string";
+ *     },
+ *   })
+ *   ok!: string;
+ * }
+ * ```
+ */
 export function HttpResponse<
   Type,
   HttpResponseType extends MapType<Type>,
@@ -185,6 +248,11 @@ export interface HttpResponseOptions<ResponseType> {
   resolver: HttpResponseResolver;
 }
 
+/**
+ * An HTTP Response resolver function. This is used to determine
+ * what response is meant to handled by the framework. For example,
+ * setting the HTTP status code.
+ */
 export type HttpResponseResolver = <HttpResponseTypes>(
   response: Responses<HttpResponseTypes>,
 ) => boolean;

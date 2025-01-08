@@ -93,4 +93,8 @@ export type MapType<T> = T extends StringConstructor ? string
   : T extends ClassType ? InstanceType<T>
   : T;
 
+// TODO(jonnydgreen): review whether this should be used.
+/**
+ * A type mapper for use with {@linkcode Tuple} types.
+ */
 export type MapTypes<T> = { [P in keyof T]: MapType<T[P]> };

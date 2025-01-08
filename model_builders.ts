@@ -15,6 +15,7 @@ const listKey = Symbol("eyrie.list");
  * Register a List type
  * @param itemsType The List items type
  * @returns The {@linkcode List} Type
+ * @typeParam ItemsType The type of the list items.
  * @example Usage
  * ```ts ignore
  * import { ObjectType, Field, List } from "@eyrie/app";
@@ -25,7 +26,7 @@ const listKey = Symbol("eyrie.list");
  * }
  * ```
  */
-export function List<T>(itemsType: T): MapType<T>[] {
+export function List<ItemsType>(itemsType: ItemsType): MapType<ItemsType>[] {
   class ListDef<T> {
     readonly [listKey] = true;
     readonly itemsType: T = itemsType as unknown as T;
@@ -46,9 +47,25 @@ export function List<T>(itemsType: T): MapType<T>[] {
     );
   }
   registerValidationModel(key, z.array(itemsTypeValidation));
-  return ListDef as unknown as MapType<T>[];
+  return ListDef as unknown as MapType<ItemsType>[];
 }
 
+// TODO: investigate and remove ignore
+/**
+ * Indicator for whether an input is a {@linkcode List} type.
+ * @param input The input to test
+ * @returns Whether the input is a {@linkcode List} type
+ * @example Usage
+ * ```ts ignore
+ * import { List, isListType } from "@eyrie/app";
+ * import { Message } from "@examples/basic/basic_model.ts"
+ * import { assert } from "@std/assert";
+ *
+ * const result = isListType(List(Message))
+ *
+ * assert(result)
+ * ```
+ */
 export function isListType(input: unknown): boolean {
   return !!(input as Record<symbol, symbol>)?.[listKey];
 }
