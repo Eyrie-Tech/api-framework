@@ -1,4 +1,4 @@
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
 import {
   type ClassType,
@@ -26,8 +26,12 @@ interface ControllerResult {
 
 export function createControllerWithPostRoute(
   controllerPath: RoutePath,
-  options: PostOptions<ClassType<unknown>, unknown>,
-  handler?: (ctx: Context, params: unknown, body: unknown) => void,
+  options: PostOptions<ClassType, ClassType>,
+  handler?: (
+    ctx: Context,
+    params: unknown,
+    body: unknown,
+  ) => void,
 ): ControllerResult {
   const input: ControllerHandlerInput = {
     ctx: undefined,
@@ -40,7 +44,11 @@ export function createControllerWithPostRoute(
     }
 
     @Post(options)
-    public postRoute(ctx: Context, params: unknown, body: unknown): unknown {
+    public postRoute(
+      ctx: Context,
+      params: unknown,
+      body: unknown,
+    ): unknown {
       input.ctx = ctx;
       input.params = params;
       input.body = body;
@@ -52,9 +60,9 @@ export function createControllerWithPostRoute(
   return { controller: BaseController, input };
 }
 
-export function createControllerWithGetRoute(
+export function createControllerWithGetRoute<Responses extends ClassType>(
   controllerPath: RoutePath,
-  options: GetOptions<unknown>,
+  options: Pick<GetOptions<Responses>, "path">,
   handler?: (ctx: Context, params: unknown) => void,
 ): ControllerResult {
   const input: ControllerHandlerInput = {
@@ -66,8 +74,9 @@ export function createControllerWithGetRoute(
     public register(): InjectableRegistration {
       return { dependencies: [] };
     }
-
-    @Get(options)
+    // TODO: the responses type here
+    // deno-lint-ignore no-explicit-any
+    @Get({ ...options, description: "Get route", responses: String as any })
     public getRoute(
       ctx: Context,
       params: unknown,

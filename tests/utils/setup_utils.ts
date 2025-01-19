@@ -1,4 +1,4 @@
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 import {
   Application,
   type ApplicationServer,
@@ -27,7 +27,10 @@ export async function setupApplication(
 }
 
 export function buildServerOrigin(server: ApplicationServer): URL {
-  return new URL(`http://${server.addr.hostname}:${server.addr.port}`);
+  const hostname = server.addr.hostname === "0.0.0.0"
+    ? "127.0.0.1"
+    : server.addr.hostname;
+  return new URL(`http://${hostname}:${server.addr.port}`);
 }
 
 export function setupPermissions(

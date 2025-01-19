@@ -1,6 +1,6 @@
 #!/usr/bin/env deno run
 
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
 // deno-lint-ignore-file
 
@@ -52,7 +52,7 @@ export interface PostOptions<R> {
 
 const listKey = Symbol("framework.list");
 
-function List<T>(input: MaybeClassType<T>): T[] {
+function List<T>(input: MaybeClassType<T>): MapTypes[] {
   return listKey as unknown as T[];
 }
 

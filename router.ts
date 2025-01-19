@@ -1,4 +1,4 @@
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
 import { STATUS_CODE, type StatusCode } from "@std/http";
 import { join } from "@std/path/join";
@@ -229,10 +229,25 @@ export type RouteHandler = (
  * The supported HTTP methods by the framework.
  */
 export const enum HttpMethod {
+  /**
+   * GET HTTP Method.
+   */
   GET = "GET",
+  /**
+   * POST HTTP Method.
+   */
   POST = "POST",
+  /**
+   * PUT HTTP Method.
+   */
   PUT = "PUT",
+  /**
+   * PATCH HTTP Method.
+   */
   PATCH = "PATCH",
+  /**
+   * DELETE HTTP Method.
+   */
   DELETE = "DELETE",
 }
 

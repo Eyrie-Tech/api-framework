@@ -1,15 +1,19 @@
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
 import {
   type Context,
   Controller,
   DriverError,
+  Field,
   Get,
   HttpMethod,
+  HttpResponse,
+  HttpResponses,
   type Injectable,
   type InjectableRegistration,
   ObjectType,
   Post,
+  type Responses,
   RouterError,
   Service,
 } from "@eyrie/app";
@@ -36,23 +40,47 @@ Deno.test({
     const getOutput = { get: true, post: false };
     const postOutput = { get: false, post: true };
     const postBody = { post: "body" };
+    @ObjectType({ description: "The Message." })
+    class BasicResponse {
+      @Field({ description: "", type: Boolean })
+      get!: boolean;
+      @Field({ description: "", type: Boolean })
+      post!: boolean;
+    }
+
+    @HttpResponses({ description: "Responses" })
+    class BasicResponses {
+      @HttpResponse({
+        description: "Successful response",
+        status: "OK",
+        type: BasicResponse,
+        resolver(response): boolean {
+          return Array.isArray(response);
+        },
+      })
+      ok!: BasicResponse;
+    }
     @Controller("/same-controller")
     class SameController implements Injectable {
       public register(): InjectableRegistration {
         return { dependencies: [] };
       }
 
-      @Get({ path: "/same-path" })
+      @Get({
+        description: "Get route",
+        path: "/same-path",
+        responses: BasicResponses,
+      })
       public getRoute(
         ctx: Context,
         params: unknown,
-      ): unknown {
+      ): Responses<BasicResponses> {
         getInput.ctx = ctx;
         getInput.params = params;
         return getOutput;
       }
 
-      @Post({ path: "/same-path" })
+      @Post({ description: "Post route", path: "/same-path" })
       public postRoute(ctx: Context, params: unknown, body: unknown): unknown {
         postInput.ctx = ctx;
         postInput.params = params;
@@ -81,7 +109,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "Router() supports route registrations with no responses",
+  name: "Router() supports route registrations with no response body",
   permissions: setupPermissions(),
   async fn() {
     // Arrange
@@ -97,12 +125,11 @@ Deno.test({
         return { dependencies: [] };
       }
 
-      @Post({ path: "/no-response" })
-      public postRoute(ctx: Context, params: unknown, body: unknown): unknown {
+      @Post({ description: "Post route", path: "/no-response" })
+      public postRoute(ctx: Context, params: unknown, body: unknown): void {
         input.ctx = ctx;
         input.params = params;
         input.body = body;
-        return "";
       }
     }
     await using setup = await setupApplication([SameController]);
@@ -132,9 +159,13 @@ Deno.test({
         return { dependencies: [] };
       }
 
-      @Get({ path: "/not-controller" })
-      public route1() {
-        return "";
+      @Get({
+        description: "Route 1",
+        path: "/not-controller",
+        responses: BasicResponses,
+      })
+      public route1(): string {
+        return "route1";
       }
     }
 
@@ -159,14 +190,22 @@ Deno.test({
         return { dependencies: [] };
       }
 
-      @Get({ path: "/duplicate" })
+      @Get({
+        description: "Route 1",
+        path: "/duplicate",
+        responses: BasicResponses,
+      })
       public route1() {
-        return "";
+        return "route1";
       }
 
-      @Get({ path: "/duplicate" })
+      @Get({
+        description: "Route 2",
+        path: "/duplicate",
+        responses: BasicResponses,
+      })
       public route2() {
-        return "";
+        return "route2";
       }
     }
 
@@ -191,7 +230,11 @@ Deno.test({
         return { dependencies: [] };
       }
 
-      @Get({ path: "/duplicate" })
+      @Get({
+        description: "Route",
+        path: "/duplicate",
+        responses: BasicResponses,
+      })
       public route() {
         return "";
       }
@@ -202,7 +245,11 @@ Deno.test({
         return { dependencies: [] };
       }
 
-      @Get({ path: "/duplicate" })
+      @Get({
+        description: "Route",
+        path: "/duplicate",
+        responses: BasicResponses,
+      })
       public route() {
         return "";
       }
@@ -236,7 +283,11 @@ Deno.test({
         return { dependencies: [] };
       }
 
-      @Post({ path: "/non-input-type", body: InvalidBody })
+      @Post({
+        description: "Route",
+        path: "/non-input-type",
+        body: InvalidBody,
+      })
       public route() {
         return "";
       }
@@ -250,3 +301,16 @@ Deno.test({
     );
   },
 });
+
+@HttpResponses({ description: "Responses" })
+class BasicResponses {
+  @HttpResponse({
+    description: "Successful response",
+    status: "OK",
+    type: String,
+    resolver(response): boolean {
+      return Array.isArray(response);
+    },
+  })
+  ok!: string;
+}

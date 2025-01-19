@@ -1,27 +1,26 @@
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
 import * as z from "zod";
-import { type ClassType, exists, type Fn } from "./utils.ts";
+import { isListType } from "./model_builders.ts";
 import {
   ClassRegistrationType,
   getRegistrationKey,
   maybeGetRegistrationKey,
   registerClass,
 } from "./registration.ts";
-
-// TODO(jonnydgreen): we most likely want custom types for this
-export type { ZodObject, ZodRawShape, ZodTypeAny } from "zod";
-
-const models = new Map<symbol, ValidationMetadata>();
-
-type ValidationMetadata = z.ZodObject<z.ZodRawShape>;
+import { type ClassType, exists, type Fn, type MapType } from "./utils.ts";
+import {
+  getValidationModel,
+  registerValidationModel,
+  type TypeInfo,
+} from "./validation.ts";
 
 /**
  * The input type class method decorator that registers a field for a type.
  *
  * @param options The field type options
- * @typeParam TypeConstructor The constructor type associated with the {@linkcode Field} decorator.
- * @typeParam Type The mapped type associated with the {@linkcode Field} decorator.
+ * @typeParam Type The constructor type associated with the {@linkcode Field} decorator.
+ * @typeParam FieldType The mapped type associated with the {@linkcode Field} decorator.
  * @returns The {@linkcode Field} decorator function.
  * @example Usage
  * ```ts no-assert
@@ -34,22 +33,22 @@ type ValidationMetadata = z.ZodObject<z.ZodRawShape>;
  * ```
  */
 export function Field<
-  TypeConstructor extends ClassType,
-  Type extends MapType<TypeConstructor>,
+  Type,
+  FieldType extends MapType<Type>,
 >(
-  options: FieldOptions<TypeConstructor>,
+  options: FieldOptions<Type>,
 ): <Class>(
   this: unknown,
   target: Class,
-  context: ClassFieldDecoratorContext<Class, Type>,
-) => (this: Class, value: Type) => Type {
+  context: ClassFieldDecoratorContext<Class, FieldType>,
+) => (this: Class, value: FieldType) => FieldType {
   function fieldDecorator<Class>(
     this: unknown,
     _target: Class,
-    context: ClassFieldDecoratorContext<Class, Type>,
-  ): (this: Class, value: Type) => Type {
+    context: ClassFieldDecoratorContext<Class, FieldType>,
+  ): (this: Class, value: FieldType) => FieldType {
     const fieldName = context.name.toString();
-    return function (this: Class, value: Type): Type {
+    return function (this: Class, value: FieldType): FieldType {
       const thisArg = this as ClassType | undefined;
       const fieldSlug = `${thisArg?.constructor.name}.${fieldName}`;
       if (context.static) {
@@ -71,49 +70,63 @@ export function Field<
       // Handle custom types
       const fieldTypeKey = maybeGetRegistrationKey(options.type);
       if (fieldTypeKey) {
-        const customValidation = models.get(fieldTypeKey);
+        const customValidation = getValidationModel(fieldTypeKey);
         if (!exists(customValidation)) {
           throw new FieldDecoratorError(
             `Field() registration failed for '${thisArg?.constructor.name}.${fieldName}': no validation schema exists for field type '${fieldTypeKey.description}'`,
           );
         }
-        models.set(
+        registerValidationModel(
           classKey,
           validation.extend({ [fieldName]: customValidation }),
         );
         return value;
       }
 
-      const typeName = options.type.name;
-      switch (typeName) {
-        case "String": {
-          models.set(
+      // TODO: should we instead build up a series of references?
+      if (typeof options.type === "function") {
+        if (isListType(options.type)) {
+          registerValidationModel(
             classKey,
             validation.extend({ [fieldName]: z.string() }),
           );
-          break;
+          return value;
         }
-        case "Number": {
-          models.set(
-            classKey,
-            validation.extend({ [fieldName]: z.number() }),
-          );
-          break;
-        }
-        case "Boolean": {
-          models.set(
-            classKey,
-            validation.extend({ [fieldName]: z.boolean() }),
-          );
-          break;
-        }
-        default: {
-          throw new FieldDecoratorError(
-            `Field() registration failed for '${thisArg?.constructor.name}.${fieldName}': unsupported type name '${typeName}'`,
-          );
+
+        const typeName = options.type.name;
+        switch (typeName) {
+          case "String": {
+            registerValidationModel(
+              classKey,
+              validation.extend({ [fieldName]: z.string() }),
+            );
+            return value;
+          }
+          case "Number": {
+            registerValidationModel(
+              classKey,
+              validation.extend({ [fieldName]: z.number() }),
+            );
+            return value;
+          }
+          case "Boolean": {
+            registerValidationModel(
+              classKey,
+              validation.extend({ [fieldName]: z.boolean() }),
+            );
+            return value;
+          }
+          default: {
+            throw new FieldDecoratorError(
+              `Field() registration failed for '${thisArg?.constructor.name}.${fieldName}': unsupported type name '${typeName}'`,
+            );
+          }
         }
       }
-      return value;
+
+      throw new FieldDecoratorError(
+        `Field() registration failed for '${thisArg?.constructor.name}.${fieldName}': unsupported type '${options.type?.toString()}'`,
+      );
     };
   }
   return fieldDecorator;
@@ -160,7 +173,7 @@ export function ObjectType(_options: ObjectTypeOptions): (
       type: ClassRegistrationType.ObjectType,
       target,
     });
-    models.set(key, z.object({}));
+    registerValidationModel(key, z.object({}));
     // TODO(jonnydgreen): is there a better way of triggering the field exports?
     new target();
   }
@@ -205,7 +218,7 @@ export function InputType(_options: InputTypeOptions): (
       target,
     });
     // TODO(jonnydgreen): insert options here
-    models.set(key, z.object({}));
+    registerValidationModel(key, z.object({}));
     // TODO(jonnydgreen): is there a better way of triggering the field exports?
     new target();
   }
@@ -243,7 +256,7 @@ function getRootTypeInfo<Class extends ClassType>(
   target: Class | Fn,
 ): TypeInfo<InstanceType<Class>> {
   const key = getRegistrationKey(target);
-  const schema = models.get(key);
+  const schema = getValidationModel(key);
   if (!exists(schema)) {
     throw new FieldDecoratorError(
       `Field() registration failed for ${fieldSlug}: no schema defined for '${key.description}'`,
@@ -251,43 +264,6 @@ function getRootTypeInfo<Class extends ClassType>(
   }
   return { key, schema: schema as TypeInfo<InstanceType<Class>>["schema"] };
 }
-
-/**
- * The type info schema used in {@linkcode TypeInfo}.
- */
-export type TypeInfoSchema<Type extends z.ZodRawShape> = z.ZodObject<
-  Type,
-  "strip",
-  z.ZodTypeAny,
-  Type,
-  Type
->;
-
-/**
- * The type information returned by {@linkcode getRootTypeInfo}.
- */
-export interface TypeInfo<Type extends z.ZodRawShape> {
-  /**
-   * The registration key of the type information.
-   */
-  key: symbol;
-  /**
-   * The schema of the of the type information.
-   */
-  schema: TypeInfoSchema<Type>;
-}
-
-/**
- * A type mapper that is used to convert types defined in decorators to those
- * defined on the decorated definitions.
- */
-export type MapType<T> = T extends StringConstructor ? string
-  : T extends NumberConstructor ? number
-  : T extends BooleanConstructor ? boolean
-  : T extends undefined ? undefined
-  : T extends null ? null
-  : T extends ClassType ? InstanceType<T>
-  : T;
 
 // TODO: look into a generic error that forces one to define:
 //  - an error code

@@ -1,12 +1,15 @@
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
 import {
   type Context,
   Controller,
   Get,
   HttpMethod,
+  HttpResponse,
+  HttpResponses,
   type Injectable,
   type InjectableRegistration,
+  type Responses,
 } from "@eyrie/app";
 import { assertEquals, assertStrictEquals } from "@std/assert";
 import { STATUS_CODE, STATUS_TEXT } from "@std/http";
@@ -29,11 +32,15 @@ Deno.test({
         return { dependencies: [] };
       }
 
-      @Get({ path: "/basic" })
+      @Get({
+        description: "Get route",
+        path: "/basic",
+        responses: BasicResponses,
+      })
       public getRoute(
         ctx: Context,
         params: unknown,
-      ): unknown {
+      ): Responses<BasicResponses> {
         input.ctx = ctx;
         input.params = params;
         return new Response(output);
@@ -51,3 +58,16 @@ Deno.test({
     assertEquals(await response.text(), output);
   },
 });
+
+@HttpResponses({ description: "Responses" })
+class BasicResponses {
+  @HttpResponse({
+    description: "Successful response",
+    status: "OK",
+    type: String,
+    resolver(response): boolean {
+      return Array.isArray(response);
+    },
+  })
+  ok!: string;
+}

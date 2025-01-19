@@ -1,19 +1,22 @@
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
+import { toPascalCase } from "@std/text";
 import type { Context } from "./context.ts";
 import {
   getRegistrationKey,
   type Injectable,
   type InjectableDecorator,
 } from "./registration.ts";
+import type { Responses } from "./response.ts";
 import {
-  HttpMethod,
+  type HttpMethod,
   registerController,
   registerRoute,
   type RoutePath,
 } from "./router.ts";
 import type { ClassType, MaybePromise } from "./utils.ts";
 
+// TODO: remove ignore
 /**
  * Register a Controller with the provided options for the class.
  *
@@ -25,7 +28,7 @@ import type { ClassType, MaybePromise } from "./utils.ts";
  * this is separately registered for groups of controllers in `Application.registerVersion`.
  * @returns a decorator that will register the controller.
  * @example Usage
- * ```ts no-assert
+ * ```ts no-assert ignore
  * import { Controller, Get, Injectable, InjectableRegistration } from "@eyrie/app";
  * @Controller('/messages')
  * class MessageController implements Injectable {
@@ -48,192 +51,6 @@ export function Controller(path: RoutePath): InjectableDecorator {
   }
   return controllerDecorator;
 }
-
-/**
- * Register a GET route with the provided options for the class method.
- *
- * Note, this will not work for private or static properties.
- *
- * @param options The options for registering a GET route.
- * @typeParam ResponseType The response type of the GET route.
- * @returns a decorator that will register the GET route
- * @example Usage
- * ```ts no-assert
- * import { Controller, Get, Injectable, InjectableRegistration } from "@eyrie/app";
- * @Controller('/messages')
- * class MessageController implements Injectable {
- *   register(): InjectableRegistration {
- *     return { dependencies: [] };
- *   }
- *   @Get({ path: "/" })
- *   public getMessages(): string[] {
- *     return ["Hello", "Hiya"];
- *   }
- * }
- * ```
- */
-export function Get<ResponseType>(
-  options: GetOptions<ResponseType>,
-): GetMethodDecorator<ResponseType> {
-  return function get(
-    _target: GetDecoratorTarget<ResponseType>,
-    context: ClassMethodDecoratorContext,
-  ): void {
-    const methodName = context.name;
-    const key = Symbol(String(methodName));
-    context.addInitializer(function (this: unknown) {
-      const thisArg = this as ClassType;
-      if (context.private || context.static) {
-        throw new RouteDecoratorError(
-          `Get() registration failed for '${thisArg?.name}.${
-            String(methodName)
-          }': private and static field registration is unsupported`,
-        );
-      }
-      const classKey = getRegistrationKey(thisArg.constructor);
-      registerRoute(key, {
-        method: HttpMethod.GET,
-        path: options.path,
-        controller: classKey,
-        methodName: methodName,
-      });
-    });
-  };
-}
-
-/**
- * Options for registering a GET request with the {@linkcode Get} decorator.
- */
-export interface GetOptions<ResponseType> {
-  /**
-   * The path to register the GET route for.
-   * This will be prefixed by the controller path.
-   */
-  path: RoutePath;
-}
-
-/**
- * The GET method for the {@linkcode Get} decorator.
- *
- * All the parameters will be included in each incoming {@linkcode Request}.
- */
-export type GetDecoratorTarget<
-  ResponseType,
-> = (
-  ctx: Context,
-  params: unknown,
-) => MaybePromise<ResponseType>;
-
-/**
- * The GET method decorator for the {@linkcode Get} decorator.
- */
-export type GetMethodDecorator<ResponseType> = (
-  target: GetDecoratorTarget<ResponseType>,
-  context: ClassMethodDecoratorContext,
-) => void;
-
-/**
- * Register a POST route with the provided options for the class method.
- *
- * Note, this will not work for private or static properties.
- *
- * @param options The options for registering a POST route.
- * @typeParam RequestBody The request body type of the POST route.
- * @typeParam ResponseType The response type of the POST route.
- * @returns a decorator that will register the POST route
- * @example Usage
- * ```ts no-assert
- * import { Controller, Post, Injectable, InjectableRegistration } from "@eyrie/app";
- *
- * @Controller('/messages')
- * class MessageController implements Injectable {
- *   register(): InjectableRegistration {
- *     return { dependencies: [] };
- *   }
- *   @Post({ path: "/" })
- *   public createMessage(): void {
- *     // Create message
- *   }
- * }
- * ```
- */
-export function Post<RequestBody, ResponseType>(
-  options: PostOptions<ClassType<RequestBody>, ResponseType>,
-): PostMethodDecorator<RequestBody, ResponseType> {
-  return function post(
-    _target: PostDecoratorTarget<RequestBody, ResponseType>,
-    context: ClassMethodDecoratorContext,
-  ): void {
-    const methodName = context.name;
-    const key = Symbol(String(methodName));
-    context.addInitializer(function (this: unknown) {
-      const thisArg = this as ClassType;
-      if (context.private || context.static) {
-        throw new RouteDecoratorError(
-          `Post() registration failed for '${thisArg?.name}.${
-            String(methodName)
-          }': private and static field registration is unsupported`,
-        );
-      }
-      const classKey = getRegistrationKey(thisArg.constructor);
-      let body: symbol | undefined = undefined;
-      if (options.body) {
-        body = getRegistrationKey(options.body);
-      }
-      registerRoute(key, {
-        method: HttpMethod.POST,
-        path: options.path,
-        controller: classKey,
-        methodName: methodName,
-        body,
-      });
-    });
-  };
-}
-
-/**
- * Options for registering a POST request with the {@linkcode Post} decorator.
- */
-export interface PostOptions<
-  RequestBody = unknown,
-  ResponseType = unknown,
-> {
-  /**
-   * The path to register the POST route for.
-   * This will be prefixed by the controller path.
-   */
-  path: RoutePath;
-  /**
-   * The request body type of the POST route.
-   */
-  body?: RequestBody;
-  /**
-   * The response type of the POST route.
-   */
-  response?: ResponseType;
-}
-
-/**
- * The POST method for the {@linkcode Post} decorator.
- *
- * All the parameters will be included in each incoming {@linkcode Request}.
- */
-export type PostDecoratorTarget<
-  RequestBody,
-  ResponseType,
-> = (
-  ctx: Context,
-  params: unknown,
-  body: RequestBody,
-) => MaybePromise<ResponseType>;
-
-/**
- * The POST method decorator for the {@linkcode Post} decorator.
- */
-export type PostMethodDecorator<RequestBody, ResponseType> = (
-  target: PostDecoratorTarget<RequestBody, ResponseType>,
-  context: ClassMethodDecoratorContext,
-) => void;
 
 /**
  * A Decorator error that can be thrown when registering the application
@@ -263,3 +80,132 @@ export class RouteDecoratorError extends Error {
    */
   override readonly name = "RouteDecoratorError";
 }
+
+/**
+ * Build decorator for the specific route method. All values of {@linkcode HttpMethod}
+ * are supported.
+ * @param options The route method decorator options.
+ * @returns The built decorator
+ * @typeParam ResponseType The response type of the route.
+ * @typeParam RequestBody The response body type of the route.
+ * @example Usage
+ * ```ts ignore
+ * import { buildRouteDecorator, HttpMethod } from "@eyrie/app";
+ * buildRouteDecorator({ method: HttpMethod.GET });
+ * ```
+ */
+export function buildRouteDecorator<
+  ResponseType extends ClassType,
+  RequestBody extends ClassType,
+>(
+  options: BuildRouteDecoratorOptions<ResponseType, RequestBody>,
+): (
+  _target:
+    | RouteDecoratorTarget<InstanceType<ResponseType>>
+    | RouteDecoratorTargetWithBody<InstanceType<ResponseType>, RequestBody>,
+  context: ClassMethodDecoratorContext,
+) => void {
+  return function route(
+    _target:
+      | RouteDecoratorTarget<InstanceType<ResponseType>>
+      | RouteDecoratorTargetWithBody<InstanceType<ResponseType>, RequestBody>,
+    context: ClassMethodDecoratorContext,
+  ): void {
+    const methodName = context.name;
+    const key = Symbol(String(methodName));
+    context.addInitializer(function (this: unknown) {
+      const thisArg = this as ClassType;
+      if (context.private || context.static) {
+        throw new RouteDecoratorError(
+          `${
+            toPascalCase(options.method)
+          }() registration failed for '${thisArg?.name}.${
+            String(methodName)
+          }': private and static field registration is unsupported`,
+        );
+      }
+      const classKey = getRegistrationKey(thisArg.constructor);
+      let body: symbol | undefined = undefined;
+      if (options.body) {
+        body = getRegistrationKey(options.body);
+      }
+      registerRoute(key, {
+        method: options.method,
+        path: options.path,
+        controller: classKey,
+        methodName: methodName,
+        ...(body ? { body } : {}),
+      });
+    });
+  };
+}
+
+/**
+ * The options of the {@linkcode buildRouteDecorator} function.
+ */
+export interface BuildRouteDecoratorOptions<
+  Responses extends ClassType,
+  RequestBody extends ClassType,
+> {
+  /**
+   * The description of the route.
+   */
+  description: string;
+  /**
+   * The method of the route.
+   */
+  method: HttpMethod;
+  /**
+   * The path to register the route for.
+   * This will be prefixed by the controller path.
+   */
+  path: RoutePath;
+  /**
+   * The responses of the route.
+   */
+  responses?: Responses;
+  /**
+   * The request body of the route.
+   */
+  body?: RequestBody;
+}
+
+/**
+ * The target method for the route decorator.
+ *
+ * All the parameters will be included in each incoming {@linkcode Request}.
+ */
+export type RouteDecoratorTarget<ResponseType> = (
+  ctx: Context,
+  params: unknown,
+) => MaybePromise<Responses<ResponseType>>;
+
+/**
+ * The target method for the route decorator.
+ *
+ * All the parameters will be included in each incoming {@linkcode Request}.
+ */
+export type RouteDecoratorTargetWithBody<
+  ResponseType,
+  RequestBody,
+> = (
+  ctx: Context,
+  params: unknown,
+  body: RequestBody,
+) => MaybePromise<Responses<ResponseType>>;
+
+/**
+ * The class method decorator for the route decorator.
+ */
+export type RouteMethodDecorator<ResponseType> = (
+  target: RouteDecoratorTarget<ResponseType>,
+  context: ClassMethodDecoratorContext,
+) => void;
+
+/**
+ * The class method decorator for the route decorator with a body.
+ */
+export type RouteMethodDecoratorWithBody<ResponseType, RequestBody> = (
+  target: RouteDecoratorTargetWithBody<ResponseType, RequestBody>,
+  context: ClassMethodDecoratorContext,
+) => void;

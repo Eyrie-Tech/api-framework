@@ -1,4 +1,4 @@
-// Copyright 2024-2024 the API framework authors. All rights reserved. MIT license.
+// Copyright 2024-2025 the API framework authors. All rights reserved. MIT license.
 
 import {
   type ClassType,
@@ -29,7 +29,7 @@ Deno.test({
     // Arrange
     const { controller, input } = createControllerWithPostRoute(
       "/messages",
-      { path: "/" },
+      { description: "Post route", path: "/" },
     );
     await using setup = await setupApplication([controller]);
     const url = new URL("/v1/messages", setup.origin);
@@ -152,7 +152,7 @@ Deno.test({
       const [Input, inputBody] = testInput();
       const { controller, input } = createControllerWithPostRoute(
         "/messages",
-        { path: "/", body: Input },
+        { description: "Post route", path: "/", body: Input },
       );
       await using setup = await setupApplication([controller]);
       const url = new URL("/v1/messages", setup.origin);
@@ -182,6 +182,187 @@ Deno.test({
   });
 });
 
+// TODO: uncomment
+// [
+//   {
+//     test: "response of type string",
+//     testResponse: <T extends ClassType>(): [T, InstanceType<T>] => {
+//       const outputBody: string = "hello";
+//       return [String as unknown as T, outputBody as InstanceType<T>];
+//     },
+//   },
+//   {
+//     test: "response of type number",
+//     testResponse: <T extends ClassType>(): [T, InstanceType<T>] => {
+//       const outputBody: number = 1234.56;
+//       return [Number as unknown as T, outputBody as InstanceType<T>];
+//     },
+//   },
+//   {
+//     test: "response of type boolean",
+//     testResponse: <T extends ClassType>(): [T, InstanceType<T>] => {
+//       const outputBody: boolean = true;
+//       return [Boolean as unknown as T, outputBody as InstanceType<T>];
+//     },
+//   },
+//   {
+//     test: "response of type object with string field",
+//     testResponse: <T extends ClassType>(): [T, InstanceType<T>] => {
+//       @ObjectType({ description: "Output" })
+//       class Output {
+//         @Field({ description: "string", type: String })
+//         string!: string;
+//       }
+//       const outputBody: Output = { string: "hello" };
+//       return [Output as unknown as T, outputBody as InstanceType<T>];
+//     },
+//   },
+//   {
+//     test: "response of type object with number field",
+//     testResponse: <T extends ClassType>(): [T, InstanceType<T>] => {
+//       @ObjectType({ description: "Output" })
+//       class Output {
+//         @Field({ description: "number", type: Number })
+//         number!: number;
+//       }
+//       const outputBody: Output = { number: 1234.56 };
+//       return [Output as unknown as T, outputBody as InstanceType<T>];
+//     },
+//   },
+//   {
+//     test: "response of type object with boolean field",
+//     testResponse: <T extends ClassType>(): [T, InstanceType<T>] => {
+//       @ObjectType({ description: "Output" })
+//       class Output {
+//         @Field({ description: "boolean", type: Boolean })
+//         boolean!: boolean;
+//       }
+//       const outputBody: Output = { boolean: true };
+//       return [Output as unknown as T, outputBody as InstanceType<T>];
+//     },
+//   },
+//   {
+//     test: "response of type object with nested object field",
+//     testResponse: <T extends ClassType>(): [T, InstanceType<T>] => {
+//       @InputType({ description: "NestedInput" })
+//       class NestedOutput {
+//         @Field({ description: "Nested String", type: String })
+//         nestedString!: string;
+//       }
+
+//       @ObjectType({ description: "Output" })
+//       class Output {
+//         @Field({ description: "Nested object", type: NestedOutput })
+//         nestedOutput!: NestedOutput;
+//       }
+//       const outputBody: Output = {
+//         nestedOutput: { nestedString: "Nested string" },
+//       };
+//       return [Output as unknown as T, outputBody as InstanceType<T>];
+//     },
+//   },
+//   {
+//     test: "response of type object with string array field",
+//     testResponse: <T extends ClassType>(): [T, InstanceType<T>] => {
+//       @ObjectType({ description: "Output" })
+//       class Output {
+//         @Field({ description: "string", type: List(String) })
+//         string!: string[];
+//       }
+//       const outputBody: Output = { string: ["hello", "there"] };
+//       return [Output as unknown as T, outputBody as InstanceType<T>];
+//     },
+//   },
+//   {
+//     test: "response of type object with number array field",
+//     testResponse: <T extends ClassType>(): [T, InstanceType<T>] => {
+//       @ObjectType({ description: "Output" })
+//       class Output {
+//         @Field({ description: "number", type: List(Number) })
+//         number!: number[];
+//       }
+//       const outputBody: Output = { number: [1234.56, 78.9] };
+//       return [Output as unknown as T, outputBody as InstanceType<T>];
+//     },
+//   },
+//   {
+//     test: "response of type object with boolean array field",
+//     testResponse: <T extends ClassType>(): [T, InstanceType<T>] => {
+//       @ObjectType({ description: "Output" })
+//       class Output {
+//         @Field({ description: "boolean", type: List(Boolean) })
+//         boolean!: boolean[];
+//       }
+//       const outputBody: Output = { boolean: [true, false] };
+//       return [Output as unknown as T, outputBody as InstanceType<T>];
+//     },
+//   },
+//   {
+//     test: "response of type object with nested object array field",
+//     testResponse: <T extends ClassType>(): [T, InstanceType<T>] => {
+//       @InputType({ description: "NestedInput" })
+//       class NestedOutput {
+//         @Field({ description: "Nested String", type: String })
+//         nestedString!: string;
+//       }
+
+//       @ObjectType({ description: "Output" })
+//       class Output {
+//         @Field({ description: "Nested object", type: List(NestedOutput) })
+//         nestedOutput!: NestedOutput[];
+//       }
+//       const outputBody: Output = {
+//         nestedOutput: [
+//           { nestedString: "Nested string 1" },
+//           { nestedString: "Nested string 2" },
+//         ],
+//       };
+//       return [Output as unknown as T, outputBody as InstanceType<T>];
+//     },
+//   },
+// ].forEach(({ test, testResponse }) => {
+//   Deno.test({
+//     name: `Post() registers a POST route with a ${test}`,
+//     permissions: setupPermissions(),
+//     async fn() {
+//       // Arrange
+//       const [Output, outputResponse] = testResponse();
+//       const { controller, input } = createControllerWithPostRoute(
+//         "/test",
+//         { path: "/", response: Output },
+//         () => outputResponse,
+//       );
+//       await using setup = await setupApplication([controller]);
+//       const url = new URL("/v1/test", setup.origin);
+//       const headers = new Headers({ "content-type": "application/json" });
+
+//       // Act
+//       const response = await fetch(url, {
+//         method: HttpMethod.POST,
+//         headers,
+//       });
+//       const text = await response.text();
+
+//       // Assert
+//       assertStrictEquals(response.status, STATUS_CODE.OK, text);
+//       assertStrictEquals(
+//         response.statusText,
+//         STATUS_TEXT[STATUS_CODE.OK],
+//         text,
+//       );
+//       assertEquals(
+//         typeof outputResponse === "object" ? JSON.parse(text) : String(text),
+//         typeof outputResponse === "object"
+//           ? outputResponse
+//           : String(outputResponse),
+//       );
+//       assertInstanceOf(input.ctx, Context);
+//       assertEquals(input.params, {});
+//       assertEquals(input.body, undefined);
+//     },
+//   });
+// });
+
 Deno.test({
   name: "Post() throws an error if registered on a static route",
   permissions: setupPermissions(),
@@ -196,8 +377,8 @@ Deno.test({
             return { dependencies: [] };
           }
 
-          @Post({ path: "/static" })
-          public static getRoute(
+          @Post({ description: "Post route", path: "/static" })
+          public static postRoute(
             _ctx: Context,
             _params: unknown,
           ): void {
@@ -205,7 +386,7 @@ Deno.test({
         }
       },
       RouteDecoratorError,
-      "Post() registration failed for 'StaticController.getRoute': private and static field registration is unsupported",
+      "Post() registration failed for 'StaticController.postRoute': private and static field registration is unsupported",
     );
   },
 });
