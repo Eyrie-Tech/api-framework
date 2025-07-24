@@ -12,6 +12,7 @@ import {
   type PostOptions,
   type RoutePath,
 } from "@eyrie/app";
+import { Options, type OptionsOptions } from "../../options_decorator.ts";
 
 export interface ControllerHandlerInput {
   ctx: Context | undefined;
@@ -78,6 +79,41 @@ export function createControllerWithGetRoute<Responses extends ClassType>(
     // deno-lint-ignore no-explicit-any
     @Get({ ...options, description: "Get route", responses: String as any })
     public getRoute(
+      ctx: Context,
+      params: unknown,
+    ): unknown {
+      input.ctx = ctx;
+      input.params = params;
+      if (handler) {
+        return handler(ctx, params);
+      }
+    }
+  }
+  return { controller: BaseController, input };
+}
+
+export function createControllerWithOptionsRoute<Responses extends ClassType>(
+  controllerPath: RoutePath,
+  options: Pick<OptionsOptions<Responses>, "path">,
+  handler?: (ctx: Context, params: unknown) => void,
+): ControllerResult {
+  const input: ControllerHandlerInput = {
+    ctx: undefined,
+    params: undefined,
+  };
+  @Controller(controllerPath)
+  class BaseController implements Injectable {
+    public register(): InjectableRegistration {
+      return { dependencies: [] };
+    }
+    // TODO: the responses type here
+    @Options({
+      ...options,
+      description: "Options route",
+      // deno-lint-ignore no-explicit-any
+      responses: String as any,
+    })
+    public optionsRoute(
       ctx: Context,
       params: unknown,
     ): unknown {

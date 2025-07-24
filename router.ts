@@ -249,6 +249,10 @@ export const enum HttpMethod {
    * DELETE HTTP Method.
    */
   DELETE = "DELETE",
+  /**
+   * OPTIONS HTTP Method.
+   */
+  OPTIONS = "OPTIONS",
 }
 
 /**
