@@ -9,6 +9,7 @@ export * from "./registration.ts";
 export * from "./route_decorators.ts";
 export * from "./post_decorator.ts";
 export * from "./get_decorator.ts";
+export * from "./options_decorator.ts";
 export * from "./put_decorator.ts";
 export * from "./patch_decorator.ts";
 export * from "./delete_decorator.ts";
