@@ -473,3 +473,95 @@ export class NotFoundError extends HttpError {
    */
   override readonly statusCode: StatusCode = STATUS_CODE.NotFound;
 }
+
+/**
+ * An {@link https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400|HTTP Bad request}
+ * error that is thrown when the request is in a malformed state.
+ *
+ * @example Usage
+ * ```ts
+ * import { BadRequestError } from "@eyrie/app";
+ * import { STATUS_CODE } from "@std/http";
+ * import { assert, assertEquals } from "@std/assert";
+ *
+ * const error = new BadRequestError()
+ * assertEquals(error.name, "BadRequestError");
+ * assertEquals(error.statusCode, STATUS_CODE.BadRequest);
+ * ```
+ */
+export class BadRequestError extends HttpError {
+  /**
+   * The name of the HTTP Bad request error.
+   *
+   * @example Usage
+   * ```ts
+   * import { BadRequestError } from "@eyrie/app";
+   * import { STATUS_CODE } from "@std/http";
+   * import { assert, assertEquals } from "@std/assert";
+   *
+   * const error = new BadRequestError()
+   * assertEquals(error.name, "BadRequestError");
+   * ```
+   */
+  override readonly name: string = "BadRequestError";
+  /**
+   * The HTTP status code of the HTTP Bad request error.
+   *
+   * @example Usage
+   * ```ts
+   * import { BadRequestError } from "@eyrie/app";
+   * import { STATUS_CODE } from "@std/http";
+   * import { assert, assertEquals } from "@std/assert";
+   *
+   * const error = new BadRequestError()
+   * assertEquals(error.statusCode, STATUS_CODE.BadRequest);
+   * ```
+   */
+  override readonly statusCode: StatusCode = STATUS_CODE.BadRequest;
+}
+
+/**
+ * An {@link https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500|HTTP Internal Server Error}
+ * error that is thrown when the server experiences an unexpected error.
+ *
+ * @example Usage
+ * ```ts
+ * import { InternalServerError } from "@eyrie/app";
+ * import { STATUS_CODE } from "@std/http";
+ * import { assert, assertEquals } from "@std/assert";
+ *
+ * const error = new InternalServerError()
+ * assertEquals(error.name, "InternalServerError");
+ * assertEquals(error.statusCode, STATUS_CODE.InternalServerError);
+ * ```
+ */
+export class InternalServerError extends HttpError {
+  /**
+   * The name of the HTTP Internal server error.
+   *
+   * @example Usage
+   * ```ts
+   * import { InternalServerError } from "@eyrie/app";
+   * import { STATUS_CODE } from "@std/http";
+   * import { assert, assertEquals } from "@std/assert";
+   *
+   * const error = new InternalServerError()
+   * assertEquals(error.name, "InternalServerError");
+   * ```
+   */
+  override readonly name: string = "InternalServerError";
+  /**
+   * The HTTP status code of the HTTP Internal server error.
+   *
+   * @example Usage
+   * ```ts
+   * import { InternalServerError } from "@eyrie/app";
+   * import { STATUS_CODE } from "@std/http";
+   * import { assert, assertEquals } from "@std/assert";
+   *
+   * const error = new InternalServerError()
+   * assertEquals(error.statusCode, STATUS_CODE.InternalServerError);
+   * ```
+   */
+  override readonly statusCode: StatusCode = STATUS_CODE.InternalServerError;
+}
