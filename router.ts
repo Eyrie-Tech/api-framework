@@ -521,7 +521,7 @@ export class BadRequestError extends HttpError {
 }
 
 /**
- * An {@link https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500|HTTP Bad request}
+ * An {@link https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500|HTTP Internal Server Error}
  * error that is thrown when the server experiences an unexpected error.
  *
  * @example Usage
